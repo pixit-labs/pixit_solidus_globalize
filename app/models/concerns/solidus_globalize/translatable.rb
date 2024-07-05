@@ -6,13 +6,8 @@ module SolidusGlobalize
 
     included do |klass|
       accepts_nested_attributes_for :translations
-      if ::Spree.solidus_gem_version < Gem::Version.new('3.3')
-        klass.whitelisted_ransackable_associations  ||= []
-        klass.whitelisted_ransackable_associations |= ['translations']
-      else
-        klass.allowed_ransackable_associations ||= []
-        klass.allowed_ransackable_associations |= ['translations']
-      end
+      klass.allowed_ransackable_associations ||= []
+      klass.allowed_ransackable_associations |= ['translations']
     end
 
     class_methods do
@@ -36,6 +31,14 @@ module SolidusGlobalize
       # preload translations
       def spree_base_scopes
         super.includes(:translations).references(:translations)
+      end
+
+      def set_translation_association(association=:translations)
+        if self.reflect_on_association(association)
+          self.accepts_nested_attributes_for association
+          self.allowed_ransackable_associations ||= []
+          self.allowed_ransackable_associations |= [association.to_s]
+        end
       end
     end
   end
